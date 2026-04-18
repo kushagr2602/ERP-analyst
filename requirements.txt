@@ -1,0 +1,33 @@
+# ERP Analyst Agent — Python Dependencies
+# Python 3.10+ required
+
+# ── Core UI ──────────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── LangChain ecosystem ───────────────────────────────────────────────────────
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.1.0
+langchain-core>=0.2.0
+
+# ── LLM providers ────────────────────────────────────────────────────────────
+openai>=1.30.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy>=2.0.0
+# Uncomment the driver you need:
+# psycopg2-binary>=2.9.0        # PostgreSQL
+# pymysql>=1.1.0                # MySQL
+# pyodbc>=5.0.0                 # SQL Server
+
+# ── Data & Visualisation ─────────────────────────────────────────────────────
+pandas>=2.1.0
+plotly>=5.20.0
+numpy>=1.26.0
+
+# ── Demo data generation ──────────────────────────────────────────────────────
+faker>=24.0.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+pydantic>=2.0.0

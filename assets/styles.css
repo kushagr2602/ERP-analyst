@@ -1,0 +1,192 @@
+/* ERP Analyst Agent — Custom Streamlit Styles */
+/* Dark, industrial, data-forward aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+/* ── Root vars ─────────────────────────────────────────────────────────────── */
+:root {
+    --bg-primary:   #0a0a1a;
+    --bg-secondary: #12122a;
+    --bg-card:      #1a1a35;
+    --accent:       #00D4FF;
+    --accent2:      #FF6B6B;
+    --accent3:      #4ECDC4;
+    --text-primary: #E0E0F0;
+    --text-muted:   #888899;
+    --border:       #2a2a4a;
+    --font-ui:      'Space Grotesk', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+}
+
+/* ── Global ─────────────────────────────────────────────────────────────────── */
+.stApp {
+    background: var(--bg-primary) !important;
+    font-family: var(--font-ui) !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.78rem !important;
+    text-align: left !important;
+    padding: 0.4rem 0.7rem !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+    font-family: var(--font-ui) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: rgba(0, 212, 255, 0.05) !important;
+}
+
+/* ── Primary buttons ─────────────────────────────────────────────────────────── */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #0066cc, #00D4FF) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: 8px !important;
+}
+
+/* ── Chat messages ───────────────────────────────────────────────────────────── */
+[data-testid="stChatMessage"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* ── Code blocks ─────────────────────────────────────────────────────────────── */
+.stCode, code {
+    font-family: var(--font-mono) !important;
+    background: #0d0d20 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--bg-secondary) !important;
+    border-radius: 10px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-family: var(--font-ui) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: rgba(0, 212, 255, 0.15) !important;
+    color: var(--accent) !important;
+}
+
+/* ── Expanders ───────────────────────────────────────────────────────────────── */
+[data-testid="stExpander"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+}
+
+/* ── Metrics ─────────────────────────────────────────────────────────────────── */
+[data-testid="stMetric"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 1rem !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--accent) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 1.5rem !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────────────────── */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stSelectbox > div > div {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+    border-radius: 8px !important;
+    font-family: var(--font-ui) !important;
+}
+
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15) !important;
+}
+
+/* ── Chat input ──────────────────────────────────────────────────────────────── */
+[data-testid="stChatInput"] {
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    background: var(--bg-card) !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1) !important;
+}
+
+/* ── Dividers ────────────────────────────────────────────────────────────────── */
+hr {
+    border-color: var(--border) !important;
+}
+
+/* ── DataFrames ──────────────────────────────────────────────────────────────── */
+.stDataFrame {
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+/* ── Status indicators ───────────────────────────────────────────────────────── */
+.stSuccess {
+    background: rgba(78, 205, 196, 0.1) !important;
+    border-left: 3px solid var(--accent3) !important;
+}
+
+.stError {
+    background: rgba(255, 107, 107, 0.1) !important;
+    border-left: 3px solid var(--accent2) !important;
+}
+
+.stInfo {
+    background: rgba(0, 212, 255, 0.08) !important;
+    border-left: 3px solid var(--accent) !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Headings ────────────────────────────────────────────────────────────────── */
+h1, h2, h3 {
+    font-family: var(--font-ui) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Caption / small text ────────────────────────────────────────────────────── */
+.stCaption, small {
+    color: var(--text-muted) !important;
+    font-family: var(--font-mono) !important;
+}
