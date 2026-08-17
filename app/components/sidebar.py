@@ -90,6 +90,7 @@ def render_sidebar():
                         with st.spinner("Reading schema…"):
                             st.session_state.schema_info = get_schema_info(engine, max_sample_rows=0)
                         st.session_state.agent = None  # invalidate cached agent
+                        st.session_state.schema_index = None  # re-embed for the new schema
                         st.success(f"✅ Connected! ({engine.dialect.name})")
                     else:
                         st.error(f"❌ {msg}")

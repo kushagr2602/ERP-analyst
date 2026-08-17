@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 import textwrap
-from typing import Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy as sa
@@ -67,15 +67,45 @@ def test_connection(engine: sa.Engine) -> Tuple[bool, str]:
 
 # ── Schema Introspection ──────────────────────────────────────────────────────
 
-def get_schema_info(engine: sa.Engine, max_sample_rows: int = 0) -> str:
+def get_fk_graph(engine: sa.Engine) -> dict[str, set[str]]:
+    """Undirected adjacency of tables joined by a foreign key.
+
+    Used by the retrieval layer: a table is useless to the LLM without the
+    tables it must be joined to, so retrieved tables get expanded along
+    these edges before the schema is rendered.
+    """
+    inspector = inspect(engine)
+    graph: dict[str, set[str]] = {t: set() for t in inspector.get_table_names()}
+
+    for table_name in graph:
+        for fk in inspector.get_foreign_keys(table_name):
+            referred = fk.get("referred_table")
+            if referred and referred in graph:
+                graph[table_name].add(referred)
+                graph[referred].add(table_name)  # joins work in both directions
+
+    return graph
+
+
+def get_schema_info(
+    engine: sa.Engine,
+    max_sample_rows: int = 0,
+    only_tables: Optional[Iterable[str]] = None,
+) -> str:
     """
     Return a compact, LLM-friendly schema description:
       TableName (col type PK?, col type, …)   [sample rows]
+
+    Pass `only_tables` to render just that subset (used by schema retrieval);
+    None renders every table.
     """
     inspector = inspect(engine)
     lines: list[str] = []
+    wanted = set(only_tables) if only_tables is not None else None
 
     for table_name in inspector.get_table_names():
+        if wanted is not None and table_name not in wanted:
+            continue
         cols = inspector.get_columns(table_name)
         pk_cols = set(inspector.get_pk_constraint(table_name).get("constrained_columns", []))
         fks = inspector.get_foreign_keys(table_name)

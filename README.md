@@ -15,12 +15,13 @@
 
 The ERP Analyst Agent lets non-technical business users query any SQL-based ERP database using plain English. It:
 
-1. **Understands** the question using GPT-4o
-2. **Generates** a safe, optimized SQL query
-3. **Validates** the query is read-only (SELECT-only guard)
-4. **Executes** against your database via SQLAlchemy
-5. **Visualizes** results as bar, line, pie, scatter, or heatmap charts
-6. **Explains** findings in plain language
+1. **Retrieves** the relevant slice of the schema (RAG — see below)
+2. **Understands** the question using GPT-4o
+3. **Generates** a safe, optimized SQL query
+4. **Validates** the query is read-only (SELECT-only guard)
+5. **Executes** against your database via SQLAlchemy
+6. **Visualizes** results as bar, line, pie, scatter, or heatmap charts
+7. **Explains** findings in plain language
 
 No SQL knowledge required. No risk of data modification.
 
@@ -34,8 +35,10 @@ Streamlit UI
   ├── Chat Tab     (NL → SQL → results pipeline)
   └── Dashboard    (auto KPI cards, pre-built charts, query history)
           │
+    Schema Retrieval (RAG)  ← embeds tables, ranks by similarity,
+          │                   expands along foreign keys
     LangChain Agent (GPT-4o)
-          │  generates SQL
+          │  generates SQL grounded in the retrieved subset
     Safety Validator  ← SELECT-only guard, blocks all writes
           │
     SQLAlchemy (read-only connection)
@@ -44,6 +47,47 @@ Streamlit UI
 ```
 
 **Database support:** SQLite · PostgreSQL · MySQL · SQL Server · Oracle (via SQLAlchemy URIs)
+
+---
+
+## Schema Retrieval (RAG)
+
+Pasting an entire schema into the prompt works for a demo and fails for a real
+ERP: a few hundred tables will not fit in the context window, and burying the
+three relevant tables among three hundred hurts SQL accuracy.
+
+`app/utils/retrieval.py` retrieves instead:
+
+1. **Index** — each table is rendered as a short document and embedded once per
+   connection with `text-embedding-3-small`.
+2. **Rank** — the question is embedded and scored against every table by cosine
+   similarity.
+3. **Expand** — the top-K tables are widened along foreign keys. This step is
+   the point: retrieval alone will happily return `order_items` without
+   `orders`, and the model then cannot write the JOIN.
+4. **Ground** — only the selected subset is rendered into the prompt.
+
+**Two representations, deliberately.** The text that gets *embedded* is natural
+language (`order items. Fields: order id, product id, qty.`). The text sent to
+the *model* is precise DDL with types and keys. Embedding the DDL directly
+ranks worse — `INTEGER` and `VARCHAR` appear in every table and are pure noise.
+On "what is our total revenue by month?" the DDL version ranked `employees`
+third; the natural-language version drops it out of the top four and puts
+`orders` and `invoices` first.
+
+**No vector database.** A few hundred tables is a few hundred vectors, and an
+exact NumPy dot product over them is faster and simpler than a nearest-neighbour
+index. FAISS or pgvector earn their place in the tens of thousands, not here.
+
+**Honest limitation.** On the 11-table demo database the win is modest — it
+trims the prompt roughly 25–35% with no measured change in SQL success (6/6
+sample questions produce working SQL with and without retrieval). The foreign-key
+graph is dense enough that expansion pulls back much of what similarity filtered
+out. The payoff scales with schema size and separability, so retrieval is
+switched off below `RETRIEVAL_MIN_TABLES` rather than pretending it always helps.
+
+The chat UI prints the similarity scores and any tables added by foreign key, so
+the retrieval step is inspectable rather than a black box.
 
 ---
 

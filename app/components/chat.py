@@ -10,6 +10,19 @@ import streamlit as st
 from app.utils.agent import generate_sql_direct, advise_chart, extract_sql
 from app.utils.database import run_query, is_safe_query
 from app.utils.charts import render_results
+from app.utils.retrieval import build_index, retrieve_schema
+
+
+def _render_retrieval_trace(thinking, trace: dict) -> None:
+    """Show which tables were selected and why -- retrieval should be inspectable."""
+    if not trace["used_retrieval"]:
+        thinking.write(f"Using full schema ({trace['reason']}).")
+        return
+
+    ranked = ", ".join(f"{t} ({s})" for t, s in trace["scores"])
+    thinking.write(f"Top matches by similarity: {ranked}")
+    if trace["added_by_fk"]:
+        thinking.write(f"Added for joins (foreign keys): {', '.join(trace['added_by_fk'])}")
 
 
 def _require_db():
@@ -110,13 +123,32 @@ def render_chat():
         thinking = st.status("🧠 Analyzing your question…", expanded=True)
 
         try:
+            # Step 0: Retrieve the relevant slice of the schema (RAG).
+            # Embedding every table costs one API call, so the index is built
+            # once per connection and cached; the sidebar clears it on connect.
+            api_key = st.session_state["openai_api_key"]
+            engine = st.session_state.db_engine
+
+            if st.session_state.get("schema_index") is None:
+                thinking.write("Indexing schema (one-off embedding pass)…")
+                st.session_state.schema_index = build_index(engine, api_key)
+
+            thinking.write("Retrieving relevant tables…")
+            schema, trace = retrieve_schema(
+                question=question,
+                engine=engine,
+                index=st.session_state.schema_index,
+                api_key=api_key,
+            )
+            _render_retrieval_trace(thinking, trace)
+
             # Step 1: Generate SQL
             thinking.write("Generating SQL query…")
             sql = generate_sql_direct(
                 question=question,
-                schema=st.session_state.schema_info,
+                schema=schema,
                 dialect=st.session_state.db_dialect,
-                openai_api_key=st.session_state["openai_api_key"],
+                openai_api_key=api_key,
                 model=st.session_state.get("model", "gpt-4o"),
             )
 

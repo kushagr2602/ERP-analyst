@@ -9,7 +9,8 @@ def init_session_state():
         "db_connected": False,    # DB connection flag
         "db_engine": None,        # SQLAlchemy engine
         "db_dialect": None,       # e.g. 'sqlite', 'postgresql'
-        "schema_info": "",        # cached schema string
+        "schema_info": "",        # cached full schema string
+        "schema_index": None,     # cached table embeddings for schema retrieval
         "last_sql": "",           # last generated SQL
         "last_df": None,          # last result DataFrame
         "query_history": [],      # list of (question, sql, rows) tuples
