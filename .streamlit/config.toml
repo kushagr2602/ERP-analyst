@@ -1,0 +1,10 @@
+# Streamlit Cloud reads this on deploy.
+[theme]
+base = "dark"
+primaryColor = "#00D4FF"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

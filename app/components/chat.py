@@ -11,6 +11,7 @@ from app.utils.agent import generate_sql_direct, advise_chart, extract_sql
 from app.utils.database import run_query, is_safe_query
 from app.utils.charts import render_results
 from app.utils.retrieval import build_index, retrieve_schema
+from app.utils import demo_limits
 
 
 def _render_retrieval_trace(thinking, trace: dict) -> None:
@@ -123,6 +124,15 @@ def render_chat():
         thinking = st.status("🧠 Analyzing your question…", expanded=True)
 
         try:
+            # Budget check first -- everything below this line costs money.
+            try:
+                demo_limits.consume()
+            except demo_limits.DemoLimitReached as exc:
+                thinking.update(label="🔑 Demo limit reached", state="error")
+                st.markdown(str(exc))
+                _add_message("assistant", str(exc))
+                return
+
             # Step 0: Retrieve the relevant slice of the schema (RAG).
             # Embedding every table costs one API call, so the index is built
             # once per connection and cached; the sidebar clears it on connect.

@@ -1,9 +1,33 @@
 """Sidebar: DB connection + settings panel."""
 
+import importlib.util
+from pathlib import Path
+
 import streamlit as st
 import sqlalchemy as sa
 
+from app.utils import demo_limits
 from app.utils.database import create_engine, test_connection, get_schema_info
+
+
+_DEMO_DB = Path(__file__).resolve().parents[2] / "data" / "erp_demo.db"
+
+
+def ensure_demo_db() -> None:
+    """Build the demo database if it is missing.
+
+    data/*.db is gitignored, so a fresh clone -- including every deployment --
+    starts without it. Generating on demand keeps the binary out of the repo
+    and means the demo works anywhere with no setup step.
+    """
+    if _DEMO_DB.exists():
+        return
+
+    generator = _DEMO_DB.parent / "generate_demo_db.py"
+    spec = importlib.util.spec_from_file_location("generate_demo_db", generator)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.build_db()
 
 
 SAMPLE_QUESTIONS = [
@@ -80,6 +104,9 @@ def render_sidebar():
         if st.button("🔗 Connect", type="primary", use_container_width=True):
             with st.spinner("Connecting…"):
                 try:
+                    if conn_str == DEMO_CONN:
+                        with st.spinner("Building the demo database…"):
+                            ensure_demo_db()
                     engine = create_engine(conn_str)
                     ok, msg = test_connection(engine)
                     if ok:
@@ -105,16 +132,39 @@ def render_sidebar():
         st.divider()
 
         # ── OpenAI API Key ──────────────────────────────────────────────────
+        # A hosted deployment can supply its own key so visitors can try the app
+        # without one. That spends the owner's money, so it is capped -- see
+        # app/utils/demo_limits.py.
+        shared_key = demo_limits.owner_key()
+
+        if shared_key:
+            s = demo_limits.status()
+            use_demo = st.toggle(
+                "Use the demo key",
+                value=st.session_state.get("using_demo_key", True),
+                help=f"Free to try, limited to {s['session_limit']} queries per session. "
+                     "Paste your own key below for unlimited use.",
+            )
+            st.session_state["using_demo_key"] = use_demo
+            if use_demo:
+                st.caption(
+                    f"Demo key · {s['session_used']}/{s['session_limit']} this session "
+                    f"· {s['global_used']}/{s['global_limit']} today"
+                )
+
         st.markdown("Your key here")
         api_key = st.text_input(
             "API Key",
             type="password",
-            value=st.session_state.get("openai_api_key", ""),
+            value="" if st.session_state.get("using_demo_key") else st.session_state.get("openai_api_key", ""),
             placeholder="sk-…",
             help="Your key is never stored or sent to third parties.",
         )
         if api_key:
             st.session_state["openai_api_key"] = api_key
+            st.session_state["using_demo_key"] = False
+        elif shared_key and st.session_state.get("using_demo_key"):
+            st.session_state["openai_api_key"] = shared_key
 
         model = st.selectbox("Model", ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"])
         st.session_state["model"] = model
